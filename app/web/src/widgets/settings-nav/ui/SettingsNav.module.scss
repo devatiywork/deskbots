@@ -1,0 +1,48 @@
+@use '@/shared/styles/tokens' as *;
+
+.nav {
+  background: $panel;
+  border-right: 2px solid $line;
+  display: flex;
+  flex-direction: column;
+  padding: 18px 12px;
+  gap: 4px;
+}
+
+.logo {
+  padding: 10px 12px 16px;
+  margin-bottom: 8px;
+  border-bottom: 2px solid $panel2;
+
+  b { display: block; font-size: 20px; color: $lilac; }
+  i { font-style: normal; font-size: 20px; color: $yellow; }
+  small { display: block; color: $dim; margin-top: 6px; font-size: 12px; }
+}
+
+%item {
+  all: unset;
+  cursor: pointer;
+  padding: 9px 12px;
+  border-radius: $radius;
+  color: $dim;
+}
+
+.tab {
+  @extend %item;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+
+  &:hover { background: $panel2; color: $text; }
+  &[aria-selected='true'] { background: $panel2; color: $text; box-shadow: inset 3px 0 0 $hi; }
+}
+
+.dot { width: 8px; height: 8px; background: currentColor; }
+
+.grow { flex: 1; }
+
+.quit {
+  @extend %item;
+
+  &:hover { color: $red; background: $panel2; }
+}

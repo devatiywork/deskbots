@@ -1,0 +1,17 @@
+﻿@use '@/shared/styles/tokens' as *;
+
+// пиксельный шрифт Tiny5: кириллица и латиница отдельными файлами
+@font-face { font-family: 'Tiny5'; src: url('/fonts/tiny5-cyr.woff2') format('woff2'); unicode-range: U+0400-045F, U+2116; }
+@font-face { font-family: 'Tiny5'; src: url('/fonts/tiny5-lat.woff2') format('woff2'); unicode-range: U+0000-00FF, U+2000-206F; }
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body, #root { margin: 0; height: 100%; }
+
+body {
+  background: $bg;
+  color: $text;
+  font: 14px/1.45 $font-ui;
+}
+
+.px { font-family: $font-px; letter-spacing: 0.5px; }

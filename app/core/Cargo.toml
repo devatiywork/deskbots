@@ -1,0 +1,28 @@
+[package]
+name = "office-core"
+version = "3.0.0"
+edition = "2021"
+description = "Локальный сервер AI-офиса: агенты, хуки, сводка дня, лимиты, нагрузка ПК"
+
+[dependencies]
+anyhow = "1"
+chrono = { version = "0.4", default-features = false, features = ["clock", "std"] }
+memchr = "2"
+regex-lite = "0.1"
+serde = { version = "1", features = ["derive"] }
+# preserve_order: settings.json и office-state.json пишутся с тем же порядком ключей, что был
+serde_json = { version = "1", features = ["preserve_order"] }
+tiny_http = "0.12"
+windows-sys = { version = "0.61", features = [
+  "Wdk_System_Threading",
+  "Win32_Foundation",
+  "Win32_Graphics_Gdi",
+  "Win32_Security_Cryptography",
+  "Win32_System_Diagnostics_ToolHelp",
+  "Win32_System_Registry",
+  "Win32_System_SystemInformation",
+  "Win32_System_Threading",
+  "Win32_UI_Input_KeyboardAndMouse",
+  "Win32_UI_Shell",
+  "Win32_UI_WindowsAndMessaging",
+] }

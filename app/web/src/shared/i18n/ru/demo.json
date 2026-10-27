@@ -1,0 +1,16 @@
+{
+  "bots": [
+    { "id": "demo-claude", "kind": "claude", "name": "Claude Code · демо", "status": "idle", "hooks": true },
+    { "id": "demo-codex", "kind": "codex", "name": "Codex · демо", "status": "idle", "hooks": true },
+    { "id": "demo-gpt", "kind": "chatgpt", "name": "ChatGPT · демо", "status": "idle" },
+    { "id": "demo-ollama", "kind": "ollama", "name": "Ollama · демо", "status": "idle", "detail": "llama3.2" }
+  ],
+  "list": [
+    { "id": "d1", "kind": "claude", "name": "Claude Code · deskbots", "status": "working", "tool": "Edit", "detail": "JournalPage.tsx", "hooks": true },
+    { "id": "d2", "kind": "codex", "name": "Codex", "status": "waiting", "tool": "Bash", "detail": "git push", "hooks": true },
+    { "id": "d3", "kind": "chatgpt", "name": "ChatGPT", "status": "working" },
+    { "id": "d4", "kind": "claude-app", "name": "Claude", "status": "idle" },
+    { "id": "d5", "kind": "ollama", "name": "Ollama · llama3.2", "status": "working", "detail": "llama3.2" }
+  ],
+  "allTrophies": { "tokens100m": 1, "tokens1b": 1, "commits50": 1, "streak7": 1, "night": 1, "early": 1, "team3": 1, "interns5": 1, "fridaypush": 1, "green10": 1 }
+}

@@ -1,0 +1,26 @@
+@use '@/shared/styles/tokens' as *;
+
+.cup {
+  background: $field;
+  border: 2px solid $panel2;
+  border-radius: 8px;
+  padding: 10px;
+  text-align: center;
+  font-size: 12.5px;
+  color: $dim;
+}
+
+.icon {
+  display: block;
+  width: 28px;
+  height: 30px;
+  margin: 4px auto 8px;
+  opacity: 0.25;
+}
+
+.got {
+  color: $text;
+  border-color: $line;
+
+  .icon { opacity: 1; }
+}

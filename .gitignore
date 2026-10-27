@@ -1,0 +1,13 @@
+# ключ доступа к серверу: создаётся приложением, в репозиторий не попадает
+office-token.js
+token.txt
+*.log
+
+# сборка Rust
+target/
+target-core/
+node_modules/
+app/src-tauri/gen/
+
+# сборка интерфейса (Vite)
+app/web/dist/

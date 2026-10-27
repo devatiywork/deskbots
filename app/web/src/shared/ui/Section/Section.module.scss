@@ -1,0 +1,12 @@
+@use '@/shared/styles/tokens' as *;
+
+.section { max-width: 760px; }
+
+.title {
+  font-size: 30px;
+  margin: 0 0 4px;
+  color: $yellow;
+  font-weight: normal;
+}
+
+.lead { color: $dim; margin: 0 0 22px; }

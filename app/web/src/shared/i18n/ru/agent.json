@@ -1,0 +1,31 @@
+{
+  "short": {
+    "claude": "CLAUDE", "claude-app": "CLAUDE", "codex": "CODEX", "chatgpt": "GPT", "ollama": "OLLAMA",
+    "gemini": "GEMINI", "grok": "GROK", "deepseek": "DEEPSEEK", "qwen": "QWEN", "mistral": "MISTRAL", "perplexity": "PPLX", "copilot": "COPILOT"
+  },
+  "nick": {
+    "claude": "Claude", "claude-app": "Claude", "codex": "Codex", "chatgpt": "GPT", "ollama": "Ollama",
+    "gemini": "Gemini", "grok": "Grok", "deepseek": "DeepSeek", "qwen": "Qwen", "mistral": "Mistral", "perplexity": "Perplexity", "copilot": "Copilot"
+  },
+  "vocative": { "claude": "Клод", "gpt": "GPT", "codex": "Codex", "ollama": "Лама", "gemini": "Gemini", "grok": "Grok", "deepseek": "DeepSeek", "qwen": "Qwen", "mistral": "Mistral", "perplexity": "Perplexity", "copilot": "Copilot" },
+  "acts": {
+    "work": "работает", "wait": "ждёт тебя", "desk": "на месте", "walk": "идёт", "coffee": "пьёт кофе", "tea": "пьёт чай",
+    "tv": "смотрит графики", "music": "слушает музыку", "game": "играет в аркаду", "phone": "в телефоне", "sleep": "дремлет",
+    "ride": "едет", "cab": "ждёт машину", "serve": "несёт чай", "brief": "на брифинге", "bench": "на лавочке",
+    "cafe": "пьёт кофе за столиком", "pizza": "встречает курьера"
+  },
+  "ride": {
+    "taxi": ["едет на такси", "ждёт такси"],
+    "tesla": ["едет на Тесле", "садится в Теслу"],
+    "limo": ["едет на лимузине", "ждёт лимузин"]
+  },
+  "tools": {
+    "Edit": ["правит", "Правлю"], "MultiEdit": ["правит", "Правлю"], "Write": ["создаёт", "Создаю"], "NotebookEdit": ["правит", "Правлю"],
+    "Read": ["читает", "Читаю"], "Bash": ["терминал:", "Запускаю"], "Grep": ["ищет", "Ищу"], "Glob": ["ищет файлы", "Ищу файлы"],
+    "WebSearch": ["гуглит", "Гуглю"], "WebFetch": ["читает сайт", "Читаю сайт"], "Task": ["зовёт помощника", "Зову помощника"], "Agent": ["зовёт помощника", "Зову помощника"],
+    "думает": ["думает над", "Думаю над"]
+  },
+  "chat": { "working": "пишет ответ в чате", "workingFirst": "Пишу ответ в чате" },
+  "local": { "working": "генерирует локально", "workingFirst": "Генерирую локально" },
+  "thinking": { "working": "думает", "workingFirst": "Думаю…" }
+}

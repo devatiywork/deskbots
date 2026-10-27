@@ -1,0 +1,87 @@
+// Панель на обоях в пиксельном стиле: все отступы кратны пикселю панели --u (2 px, «Крупная» — 3 px),
+// шрифт Tiny5 размером --fs (20 или 30 px — кратно 10, чтобы буквы не размывались).
+
+// рамка с вырезанными на один пиксель углами, как у пиксельных окон
+@mixin notch($u) {
+  clip-path: polygon(
+    #{$u} 0, calc(100% - #{$u}) 0, calc(100% - #{$u}) #{$u}, 100% #{$u}, 100% calc(100% - #{$u}), calc(100% - #{$u}) calc(100% - #{$u}),
+    calc(100% - #{$u}) 100%, #{$u} 100%, #{$u} calc(100% - #{$u}), 0 calc(100% - #{$u}), 0 #{$u}, #{$u} #{$u}
+  );
+}
+
+.panel {
+  --pad: calc(var(--u) * 6);
+  position: fixed;
+  top: calc(var(--u) * 12);
+  z-index: 2;
+  font: var(--fs) / 1.3 'Tiny5', 'Segoe UI', sans-serif;
+  color: #e0dafa;
+  white-space: nowrap;
+  user-select: none;
+  min-width: 120px;
+}
+.right { right: calc(var(--u) * 12); }
+.left { left: calc(var(--u) * 12); }
+
+.box {
+  background: var(--edge);
+  padding: var(--u);
+  @include notch(var(--u));
+}
+.fill {
+  background: var(--fill);
+  height: 100%;
+  @include notch(var(--u));
+}
+
+.glow > .fill { background: transparent; }
+.body > .fill { padding: var(--pad); }
+
+.head > .fill { padding: var(--u) calc(var(--u) * 2); }
+.headRow { display: flex; justify-content: space-between; gap: calc(var(--u) * 10); }
+.title { color: #b9a8ff; }
+.clock { color: #ffcf5c; }
+
+.rows { margin: calc(var(--u) * 3) 0 calc(var(--u) * 2); }
+.row {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--u) * 3);
+  padding: calc(var(--u) * 1.5) 0;
+}
+.rowText { line-height: 1.15; }
+.name { color: #f7f5ff; }
+.empty { color: #9a92c4; padding: calc(var(--u) * 2) 0; }
+.warn { color: #ffcf5c; }
+
+.hint { color: #ffcf5c; margin-bottom: var(--u); }
+.stat { color: #7fe0b4; margin-bottom: var(--u); }
+.sun { color: #9a92c4; margin-bottom: calc(var(--u) * 2); }
+
+.buttons { display: flex; flex-direction: column; gap: calc(var(--u) * 2); margin: 0 calc(var(--u) * -2); }
+.btnRow { display: flex; gap: calc(var(--u) * 2); }
+
+.btn {
+  flex: 1;
+  cursor: pointer;
+  --fill-hover: #2e2760;
+  --edge-hover: #b9a8ff;
+
+  &[data-hover] { --fill: var(--fill-hover) !important; --edge: var(--edge-hover) !important; }
+}
+.half { flex: 1; }
+.compact { flex: none; }
+.demoOn { --fill-hover: #1f5a46; --edge-hover: #b8f5d8; }
+.demoOff {
+  --fill-hover: #262238; --edge-hover: #8a82b0;
+  .btnText { color: #8a82b0; }
+}
+
+.btnInner {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--u) * 2);
+  padding: calc(var(--u) * 0.5) calc(var(--u) * 3);
+}
+.btnText { flex: 1; color: #e0dafa; }
+.more { color: #7d6ef0; }

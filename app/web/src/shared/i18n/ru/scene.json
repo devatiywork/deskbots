@@ -1,0 +1,35 @@
+{
+  "billboard": {
+    "pc": "ПК",
+    "cpu": "ЦП",
+    "gpu": "ГП",
+    "ram": "ОЗУ",
+    "claude": "CLAUDE",
+    "codex": "CODEX",
+    "five": "5ч",
+    "week": "нед.",
+    "limitUntil": "лимит до {time}",
+    "limitHit": "упёрся в лимит",
+    "reset": "сброс {time}",
+    "notStarted": "окно не начато",
+    "none": "—",
+    "stop": "стоп",
+    "tokens": "{n} ток."
+  },
+  "board": {
+    "week": "WEEK",
+    "files": "FILES",
+    "commands": "CMDS",
+    "commits": "COMMITS",
+    "tokens": "TOKENS",
+    "days": "ВПВСЧПС"
+  },
+  "tip": {
+    "pc": "ЦП {cpu}% · ОЗУ {mem}%",
+    "gpu": " · видеокарта {load}%, {temp}°, память {vram}%",
+    "noServer": "Серверная: нужен сервер офиса",
+    "cup": "Кубок: {title}",
+    "cupMissing": "Пока нет: {title}",
+    "cups": "Кубков: {n} из {total}"
+  }
+}

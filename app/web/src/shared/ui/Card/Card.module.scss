@@ -1,0 +1,16 @@
+@use '@/shared/styles/tokens' as *;
+
+.card {
+  background: $panel;
+  border: 2px solid $panel2;
+  border-radius: $radius-card;
+  padding: 6px 18px;
+  margin-bottom: 16px;
+}
+
+.title {
+  font-size: 20px;
+  font-weight: normal;
+  color: $lilac;
+  margin: 12px 0 4px;
+}

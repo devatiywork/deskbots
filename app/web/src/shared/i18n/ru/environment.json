@@ -1,0 +1,4 @@
+{
+  "seasons": { "auto": "Авто", "spring": "Весна", "summer": "Лето", "autumn": "Осень", "winter": "Зима" },
+  "weathers": { "real": "Реальная", "auto": "Авто", "clear": "Ясно", "rain": "Дождь", "storm": "Гроза", "snow": "Снег", "fog": "Туман", "wind": "Ветер" }
+}

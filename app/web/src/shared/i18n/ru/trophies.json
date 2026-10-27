@@ -1,0 +1,12 @@
+{
+  "tokens100m": { "title": "100M токенов за день", "color": "#c9d0e0" },
+  "tokens1b": { "title": "Миллиард токенов за день", "color": "#ffcf5c" },
+  "commits50": { "title": "50 коммитов за день", "color": "#7fe0b4" },
+  "streak7": { "title": "7 дней подряд", "color": "#ff9a4a" },
+  "night": { "title": "Ночная смена", "color": "#9a8cff" },
+  "early": { "title": "Ранняя пташка", "color": "#ffe7a3" },
+  "team3": { "title": "Три агента работают разом", "color": "#5cc8ff" },
+  "interns5": { "title": "Пять стажёров сразу", "color": "#ff9ab8" },
+  "fridaypush": { "title": "Push в пятницу вечером", "color": "#ff5c5c" },
+  "green10": { "title": "10 зелёных прогонов тестов", "color": "#58b86a" }
+}

@@ -15,11 +15,12 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
-use std::time::Duration;
+use std::time::{Duration, Instant};
 use tauri::menu::{CheckMenuItem, Menu, MenuItem, PredefinedMenuItem};
 use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
 use tauri::{AppHandle, Emitter, Manager, State, WebviewUrl, WebviewWindowBuilder};
 use windows::Win32::Foundation::HWND;
+use windows::Win32::UI::WindowsAndMessaging::{ShowWindow, SW_HIDE};
 
 // одинаковые для всех окон: у WebView2 одно окружение на приложение.
 // Окно обоев закрыто иконками, и без этих ключей Chromium считал бы его невидимым и останавливал анимацию.
@@ -34,6 +35,8 @@ struct Shared {
     office: Option<office::Office>,
     error: String,
     placed: Mutex<HashMap<String, Placed>>,   // по метке окна обоев (wp-DISPLAY2)
+    missing: Mutex<HashMap<String, Instant>>, // окна обоев, чей монитор пропал (уснул, переподключается): с какого момента
+    seen: Mutex<String>,                      // набор мониторов, последний записанный в журнал
     main_screen: Mutex<String>,               // метка окна обоев, которое играет звук
     desk_shown: AtomicBool,                   // рабочий стол на мониторе со звуком виден, а не закрыт окнами
     syncing: Mutex<()>,
@@ -92,22 +95,83 @@ fn place_wallpaper(app: &AppHandle, label: &str) {
     }
 }
 
+/// Сколько ждать пропавший монитор, прежде чем закрыть его окно обоев.
+const MISSING_KEEP: Duration = Duration::from_secs(30 * 60);
+
+/// Набор мониторов — в журнал, когда он меняется: по нему видно, что мониторы уснули, проснулись или переподключились.
+fn note_monitors(sh: &Shared, list: &[desktop::Monitor]) {
+    let s = list.iter().map(|m| format!("{} {} {},{} {}x{}", m.id.trim_start_matches(r"\\.\"), m.name, m.x, m.y, m.w, m.h)).collect::<Vec<_>>().join("; ");
+    let mut seen = sh.seen.lock().unwrap();
+    if *seen != s { log(sh, &format!("мониторы: {}", if s.is_empty() { "ни одного" } else { &s })); *seen = s; }
+}
+
+/// Прячет или показывает окно обоев вместе с WebView2: спрятанная страница не рисует кадры (в главном потоке).
+fn set_shown(win: &tauri::WebviewWindow, on: bool) {
+    if !on { if let Ok(h) = win.hwnd() { unsafe { let _ = ShowWindow(HWND(h.0 as _), SW_HIDE); } } }
+    let _ = win.with_webview(move |pw| unsafe { let _ = pw.controller().SetIsVisible(on); });
+}
+
+/// Процесс страницы обоев упал или завис: перезагружаем её, иначе вместо офиса так и останется пустое окно.
+fn reload_on_crash(sh: &Arc<Shared>, win: &tauri::WebviewWindow) {
+    let sh = sh.clone();
+    let _ = win.with_webview(move |pw| unsafe {
+        use webview2_com::Microsoft::Web::WebView2::Win32::*;
+        use webview2_com::ProcessFailedEventHandler;
+        let Ok(wv) = pw.controller().CoreWebView2() else { return };
+        let mut token = 0i64;
+        let _ = wv.add_ProcessFailed(&ProcessFailedEventHandler::create(Box::new(move |wv, args| {
+            let mut kind = COREWEBVIEW2_PROCESS_FAILED_KIND::default();
+            if let Some(a) = args { a.ProcessFailedKind(&mut kind)?; }
+            if kind == COREWEBVIEW2_PROCESS_FAILED_KIND_RENDER_PROCESS_EXITED || kind == COREWEBVIEW2_PROCESS_FAILED_KIND_RENDER_PROCESS_UNRESPONSIVE {
+                log(&sh, &format!("страница обоев упала (вид сбоя {}), перезагружаю", kind.0));
+                if let Some(wv) = wv { wv.Reload()?; }
+            }
+            Ok(())
+        })), &mut token);
+    });
+}
+
 // Окна обоев под выбранные мониторы: недостающие создаёт, сдвинутые встраивает заново (Explorer перезапустился,
-// поменяли разрешение), лишние закрывает. Только из фонового потока: окно, созданное в главном потоке, WebView2 вешает.
+// поменяли разрешение), ненужные закрывает. Пропавший монитор (уснул, переподключается, меняет режим) — не повод
+// закрывать окно: офис начался бы заново; окно прячется и возвращается вместе с монитором.
+// Только из фонового потока: окно, созданное в главном потоке, WebView2 вешает.
 fn sync_wallpapers(app: &AppHandle) {
     let sh = app.state::<Arc<Shared>>().inner().clone();
     let _one = sh.syncing.lock().unwrap();
+    let list = desktop::monitors();
+    note_monitors(&sh, &list);
+    // при пробуждении и смене режима экрана мониторы на миг пропадают все сразу: ждём, пока вернутся
+    if list.is_empty() { return; }
     let want = sh.settings.lock().unwrap().monitors.clone();
-    let targets = desktop::pick(&desktop::monitors(), &want);
+    let targets = desktop::pick(&list, &want);
     let labels: Vec<String> = targets.iter().map(|m| desktop::label(&m.id)).collect();
-    let mut removed = false;
+    let mut changed = false;
     for (label, win) in app.webview_windows() {
-        if label.starts_with("wp-") && !labels.contains(&label) {
-            removed |= sh.placed.lock().unwrap().remove(&label).is_some();
-            let _ = win.destroy();
+        if !label.starts_with("wp-") || labels.contains(&label) { continue; }
+        // монитор на месте, но не выбран в настройках — окно не нужно; пропал — ждём его до MISSING_KEEP
+        let present = list.iter().any(|m| desktop::label(&m.id) == label);
+        let gone_for = {
+            let mut ms = sh.missing.lock().unwrap();
+            if present { ms.remove(&label); None } else { Some(ms.entry(label.clone()).or_insert_with(Instant::now).elapsed()) }
+        };
+        match gone_for {
+            Some(d) if d < MISSING_KEEP => {
+                if sh.placed.lock().unwrap().remove(&label).is_some() {
+                    changed = true;
+                    let w = win.clone();
+                    let _ = app.run_on_main_thread(move || set_shown(&w, false));
+                    log(&sh, &format!("монитор окна {label} пропал: обои спрятаны до его возвращения"));
+                }
+            }
+            _ => {
+                sh.missing.lock().unwrap().remove(&label);
+                changed |= sh.placed.lock().unwrap().remove(&label).is_some();
+                let _ = win.destroy();
+                log(&sh, &format!("окно обоев {label} закрыто: {}", if present { "монитор не выбран в настройках" } else { "монитор так и не вернулся" }));
+            }
         }
     }
-    if removed {
+    if changed {
         mouse::set_targets(sh.placed.lock().unwrap().values().map(|p| (p.rect, p.hwnd)).collect());
     }
     // звук играет одно окно: на главном мониторе, а если его не выбрали — на первом
@@ -132,11 +196,22 @@ fn sync_wallpapers(app: &AppHandle) {
                     }
                 })
                 .build();
-            if let Err(e) = built { log(&sh, &format!("не смог создать окно обоев для {}: {e}", m.name)); continue; }
+            match built {
+                Ok(w) => reload_on_crash(&sh, &w),
+                Err(e) => { log(&sh, &format!("не смог создать окно обоев для {}: {e}", m.name)); continue; }
+            }
+        } else if sh.missing.lock().unwrap().remove(label).is_some() {
+            // монитор вернулся: показываем то же окно, офис продолжается с того места
+            if let Some(w) = app.get_webview_window(label) { let _ = app.run_on_main_thread(move || set_shown(&w, true)); }
+            log(&sh, &format!("монитор {} вернулся: обои снова на месте", m.name));
         }
-        let ok = sh.placed.lock().unwrap().get(label).is_some_and(|p| p.rect == (m.x, m.y, m.w, m.h)
-            && desktop::still_attached(HWND(p.hwnd as _), HWND(p.parent as _)));
-        if !ok {
+        let why = match sh.placed.lock().unwrap().get(label) {
+            None => Some(""),
+            Some(p) if p.rect != (m.x, m.y, m.w, m.h) => Some("монитор сменил размер или место"),
+            Some(p) => desktop::detached(HWND(p.hwnd as _), HWND(p.parent as _)),
+        };
+        if let Some(why) = why {
+            if !why.is_empty() { log(&sh, &format!("обои на {} встраиваю заново: {why}", m.name)); }
             let (a, l) = (app.clone(), label.clone());
             let _ = app.run_on_main_thread(move || place_wallpaper(&a, &l));
         }
@@ -337,7 +412,8 @@ fn main() {
         Err(e) => (None, format!("сервер офиса не запустился: {e}")),
     };
     let quiet = std::env::args().any(|a| a == "--autostart");
-    let shared = Arc::new(Shared { dir, settings: Mutex::new(s), office, error, placed: Mutex::new(HashMap::new()), main_screen: Mutex::new(String::new()),
+    let shared = Arc::new(Shared { dir, settings: Mutex::new(s), office, error, placed: Mutex::new(HashMap::new()),
+        missing: Mutex::new(HashMap::new()), seen: Mutex::new(String::new()), main_screen: Mutex::new(String::new()),
         desk_shown: AtomicBool::new(true), syncing: Mutex::new(()), pause_item: Mutex::new(None) });
 
     tauri::Builder::default()

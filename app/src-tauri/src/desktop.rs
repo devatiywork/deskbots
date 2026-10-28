@@ -147,19 +147,19 @@ pub fn attach(hwnd: HWND, r: (i32, i32, i32, i32)) -> Result<Attached, String> {
     }
 }
 
-/// Окно ещё на своём месте: родитель жив (Explorer мог перезапуститься), а на 24H2 оно выше фона WorkerW —
-/// перерисовывая рабочий стол (например, после нового ярлыка), Explorer может опустить его под фон.
-pub fn still_attached(hwnd: HWND, parent: HWND) -> bool {
+/// Почему окно больше не на своём месте (None — на месте): родитель пропал (Explorer перезапустился) или на 24H2
+/// окно оказалось ниже фона WorkerW — перерисовывая рабочий стол (например, после нового ярлыка), Explorer может опустить его под фон.
+pub fn detached(hwnd: HWND, parent: HWND) -> Option<&'static str> {
     unsafe {
-        if !IsWindow(Some(parent)).as_bool() || !GetParent(hwnd).is_ok_and(|p| p == parent) { return false; }
-        let Some(bg) = FindWindowExW(Some(parent), None, w!("WorkerW"), PCWSTR::null()).ok().filter(|h| !h.is_invalid()) else { return true };
+        if !IsWindow(Some(parent)).as_bool() || !GetParent(hwnd).is_ok_and(|p| p == parent) { return Some("Explorer пересоздал рабочий стол"); }
+        let bg = FindWindowExW(Some(parent), None, w!("WorkerW"), PCWSTR::null()).ok().filter(|h| !h.is_invalid())?;
         // фон должен быть где-то ниже нас среди соседей
         let mut h = GetWindow(hwnd, GW_HWNDNEXT).ok().filter(|h| !h.is_invalid());
         while let Some(x) = h {
-            if x == bg { return true; }
+            if x == bg { return None; }
             h = GetWindow(x, GW_HWNDNEXT).ok().filter(|h| !h.is_invalid());
         }
-        false
+        Some("окно оказалось под фоном")
     }
 }
 
